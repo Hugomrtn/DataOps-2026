@@ -7,11 +7,11 @@ on:
 env:
   PROJECT_ID: ensai-2026
   REGION: europe-west1
-  SERVICE_NAME: gender-prediction-api
-  IMAGE: europe-west1-docker.pkg.dev/YOUR_PROJECT_ID/...
+  SERVICE_NAME: gender-prediction-api-2451
+  IMAGE: europe-west1-docker.pkg.dev/ensai-2026/id2551/prenoms-api2451
 
 jobs:
-  deploy:
+  build_and_push:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,11 +26,21 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker
-        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+      - name: Build Docker image
+        run: docker build -t ${{ env.IMAGE }} .
 
-      - name: Build and push Docker image
-        run: ...
+      - name: Push Docker image
+        run: docker push ${{ env.IMAGE }}
 
+  deploy:
+  runs-on: ubuntu-latest
+
+  needs: build_and_push
+
+  steps:
       - name: Deploy to Cloud Run
-        run: ...
+        run: |
+            gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image ${{ env.IMAGE }} \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated
